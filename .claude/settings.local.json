@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python test.py)",
+      "Bash(python agentic_architecture/agentic_loops/practice_01_basic_loop.py)",
+      "WebFetch(domain:claudecertificationguide.com)",
+      "Bash(python -m py_compile *.py)"
+    ]
+  }
+}
