@@ -20,14 +20,38 @@ from dotenv import load_dotenv
 load_dotenv()
 
 API_KEY = os.getenv("ANTHROPIC_API_KEY")
+API_BASE = os.getenv("ANTHROPIC_API_BASE", "")
 
 if not API_KEY:
-    raise ValueError("ANTHROPIC_API_KEY not found in .env file")
+    raise ValueError("""
++==========================================================================+
+|                                                                          |
+|  ERROR: ANTHROPIC_API_KEY not found!                                     |
+|                                                                          |
+|  Please create a .env file with your API key:                           |
+|                                                                          |
+|  1. Create a file named ".env" in the project root                       |
+|  2. Add this line:                                                       |
+|     ANTHROPIC_API_KEY=sk-ant-your-key-here                              |
+|                                                                          |
+|  To get your API key:                                                   |
+|  - Go to https://console.anthropic.com/                                 |
+|  - Sign up/log in                                                        |
+|  - Go to API Keys section                                                |
+|  - Create a new key                                                      |
+|                                                                          |
++==========================================================================+
+    """)
 
-
+# Import after env check
 from anthropic import Anthropic
 
-client = Anthropic(api_key=API_KEY)
+# Create client with proper configuration
+client_kwargs = {"api_key": API_KEY}
+if API_BASE:
+    client_kwargs["base_url"] = API_BASE
+
+client = Anthropic(**client_kwargs)
 
 
 # ============================================================================
