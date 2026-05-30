@@ -8,11 +8,14 @@
 |                                                                           |
 |  Perfect for understanding the mechanics step-by-step!                  |
 |                                                                           |
+|  TEACHING MODE: Sleep timers added for student comprehension            |
+|                                                                           |
 +===========================================================================
 """
 
 import os
 import sys
+import time
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -27,6 +30,27 @@ if not API_KEY:
 from anthropic import Anthropic
 
 client = Anthropic(api_key=API_KEY)
+
+
+# ============================================================================
+# CONFIGURATION - Teaching Mode Settings
+# ============================================================================
+
+TEACHING_MODE = True  # Set to False for faster execution
+
+def pause(seconds: float = 1.5, message: str = ""):
+    """Pause execution for student comprehension."""
+    if TEACHING_MODE:
+        print()
+        if message:
+            print(f"    [PAUSE] {message}")
+        time.sleep(seconds)
+
+
+def section_pause():
+    """Longer pause between major sections."""
+    if TEACHING_MODE:
+        time.sleep(2.0)
 
 
 # ============================================================================
@@ -50,6 +74,7 @@ class FlowLogger:
         print(f"{'='*60}")
         print(message)
         print()
+        pause(1.0, f"Step {self.step} complete")
 
     def next_iteration(self):
         """Start the next iteration."""
@@ -57,6 +82,7 @@ class FlowLogger:
         print(f"\n\n{'#'*70}")
         print(f"# ITERATION {self.iteration}")
         print(f"#{'#'*70}\n")
+        pause(1.5, f"Starting iteration {self.iteration}")
 
     def separator(self, title: str = ""):
         """Print a separator with optional title."""
@@ -64,6 +90,7 @@ class FlowLogger:
         if title:
             print(f"~ {title}")
             print(f"~{'~'*59}")
+        pause(0.8, "Moving to next phase")
 
 
 # ============================================================================
@@ -99,33 +126,55 @@ def execute_tool_locally(tool_name: str, tool_input: dict, logger: FlowLogger) -
     EXECUTES THE TOOL ON YOUR LOCAL MACHINE!
 
     This is the key part: Claude tells us WHAT to do, but WE do it HERE.
+
+    IMPORTANT CONCEPT FOR STUDENTS:
+    --------------------------------
+    Claude is a REASONING engine, not an EXECUTION engine.
+    Claude decides WHAT tool to use, but YOUR CODE actually RUNS it.
+
+    Think of it like this:
+    - Claude = The architect who designs the plan
+    - Your code = The construction workers who execute the plan
     """
     logger.separator("TOOL EXECUTION ON YOUR LOCAL MACHINE")
     print(f"|")
-    print(f"| TOOL EXECUTOR TRIGGERED!")
+    print(f"| ============================================================")
+    print(f"| TEACHER NOTE: This is where YOUR code executes the tool!")
+    print(f"| ============================================================")
     print(f"|")
-    print(f"| This code runs on YOUR computer, NOT in Claude's cloud!")
+    print(f"| REMEMBER: Tools execute on YOUR machine, NOT Claude's cloud!")
     print(f"|")
-    print(f"| Tool Name: {tool_name}")
-    print(f"| Tool Input: {tool_input}")
+    pause(2.0, "Understanding tool execution location")
     print(f"|")
+    print(f"| Tool that was requested: {tool_name}")
+    print(f"| Parameters (input) passed: {tool_input}")
+    print(f"|")
+    pause(1.0, "Analyzing tool request")
 
     result = None
     if tool_name == "calculator":
         expression = tool_input.get("expression", "")
         print(f"|")
-        print(f"| Evaluating expression: {expression}")
+        print(f"| Evaluating mathematical expression: {expression}")
         print(f"|")
+        pause(1.5, "Computing the result")
 
         try:
             result = eval(expression)
-            print(f"| RESULT: {result} (type: {type(result).__name__})")
+            print(f"|")
+            print(f"| ===============================================")
+            print(f"| COMPUTATION COMPLETE!")
+            print(f"| Result: {result}")
+            print(f"| Result type: {type(result).__name__}")
+            print(f"| ===============================================")
+            print(f"|")
         except Exception as e:
             result = f"Error: {e}"
-            print(f"| ERROR: {e}")
+            print(f"| ERROR occurred: {e}")
 
+    pause(1.0, "Tool execution finished")
     print(f"|")
-    print(f"| Tool executor complete!")
+    print(f"| Tool executor complete! Returning result to agentic loop...")
     print(f"|")
 
     return str(result)
@@ -147,54 +196,98 @@ def run_logged_agentic_loop(user_message: str):
     # INITIALIZATION
     # =========================================================================
 
-    logger.separator("INITIALIZATION")
+    logger.separator("PHASE 0: INITIALIZATION")
 
-    print("| Setting up the agentic loop...")
     print("|")
-    print("| Creating empty messages list...")
+    print("| STUDENT GUIDE: What happens in this phase?")
+    print("| - We set up our Python environment")
+    print("| - Create an empty messages list to store conversation")
+    print("| - Define the tools we want Claude to be able to use")
+    print("|")
+    pause(2.0, "Understanding initialization")
+
+    print("|")
+    print("| Step 1: Creating empty messages list...")
+    print("|")
+    print("|     messages = []")
+    print("|")
     messages = []
+    pause(1.0, "Empty messages list created")
 
     print("|")
-    print("| Defining available tools...")
+    print("| Step 2: Defining available tools...")
+    print("|")
+    print("|     This tells Claude what tools exist and when to use them")
+    print("|")
     tools = get_tool_definition()
-    print(f"|")
     print(f"| Tools defined: {[t['name'] for t in tools]}")
     print(f"|")
+    pause(1.5, "Tool definitions ready")
+
     print("| Tool schema that will be sent to Claude:")
+    print(f"|")
     print(f"| {tools}")
     print("|")
     print("| [INFO] Claude sees this tool definition and learns when to use it")
     print("|")
+    pause(1.0, "Understanding tool schema")
 
     # =========================================================================
     # ADD USER MESSAGE
     # =========================================================================
 
-    logger.separator("ADDING USER MESSAGE TO THE CONVERSATION")
+    logger.separator("PHASE 1: ADDING USER MESSAGE")
+
+    print("|")
+    print("| STUDENT GUIDE: What happens in this phase?")
+    print("| - User sends a message (like 'What is 1500 + 2500?')")
+    print("| - We wrap it in a 'user' role message structure")
+    print("| - Add it to our messages list")
+    print("|")
+    pause(2.0, "Understanding user message handling")
 
     print(f"| User message: \"{user_message}\"")
     print("|")
-    print("| Building the role='user' message structure...")
+    print("| Step 1: Building the role='user' message structure...")
     print("|")
-    print("| messages = [{")
-    print("|     'role': 'user',")
-    print("|     'content': user_message")
-    print("| }]")
+    print("|     messages.append({")
+    print("|         'role': 'user',")
+    print("|         'content': user_message")
+    print("|     })")
     print("|")
+    pause(1.0, "Building user message structure")
 
     messages.append({
         "role": "user",
         "content": user_message
     })
 
+    print("|")
     print("| [SUCCESS] User message added to conversation history!")
     print("|")
     print(f"| Current messages list has {len(messages)} message(s)")
     print("|")
+    print("|")
+    print("| TEACHER NOTE: The messages list now contains:")
+    print("|     messages = [")
+    print("|         {'role': 'user', 'content': 'What is 1500 + 2500?...'}")
+    print("|     ]")
+    print("|")
+    pause(1.5, "User message added to history")
 
     # =========================================================================
     # MAIN LOOP
     # =========================================================================
+
+    section_pause()
+    print("=" * 70)
+    print("STARTING THE MAIN AGENTIC LOOP")
+    print("=" * 70)
+    print("""
+| This is where the magic happens!
+| The loop will continue until Claude says it's done (end_turn)
+|""")
+    pause(2.0, "Starting main loop")
 
     max_iterations = 10  # Safety limit!
     iteration = 0
@@ -209,21 +302,44 @@ def run_logged_agentic_loop(user_message: str):
 
         logger.separator("STEP 1: SENDING REQUEST TO CLAUDE API")
 
+        print("|")
+        print("| STUDENT GUIDE:")
+        print("| - This is where we send our messages to Claude")
+        print("| - We include the tool definitions so Claude knows what it can use")
+        print("| - Claude will analyze and respond with what it wants to do")
+        print("|")
+        pause(2.5, "Understanding API request")
+
         print("| Preparing to call client.messages.create()...")
         print("|")
         print("| Parameters being sent:")
         print("|   - model: 'claude-haiku-4-5-20250601'")
-        print(f"│   - max_tokens: 4096")
+        print(f"|   - max_tokens: 4096")
         print(f"|   - messages: [{len(messages)} message(s) in history]")
         print("|   - tools: [calculator tool]")
         print("|")
-        print("| [INFO] This API call goes to Claude's servers")
-        print("|        Claude receives: your message + tool definitions")
-        print("|        Claude responds with: What it wants to do next")
-        print("|")
+        pause(1.0, "Reviewing API parameters")
 
-        print("| Calling API now...")
-        print("| v" * 10)
+        print("|")
+        print("| VISUAL: What's happening now?")
+        print("|")
+        print("|    Your Computer                          Claude Cloud")
+        print("|    =============                          ===========")
+        print("|")
+        print("|    messages.create() --------->  Claude receives request")
+        print("|                                     - user message")
+        print("|                                     - tool definitions")
+        print("|                                     (Claude learns about tools)")
+        print("|")
+        print("|")
+        pause(2.0, "Visualizing the API call")
+
+        print("|")
+        print("| [API CALL] Sending request to Claude...")
+        print("|")
+        print("|     v" * 15)
+        print("|")
+        pause(1.0, "Making API call")
 
         response = client.messages.create(
             model="claude-haiku-4-5-20250601",
@@ -233,16 +349,25 @@ def run_logged_agentic_loop(user_message: str):
         )
 
         print("|")
-        print("| ^" * 10)
+        print("|     ^" * 15)
         print("|")
         print("| [SUCCESS] Response received from Claude!")
         print("|")
+        pause(1.5, "API response received")
 
         # =====================================================================
         # STEP 2: EXAMINE RESPONSE
         # =====================================================================
 
         logger.separator("STEP 2: EXAMINING CLAUDE'S RESPONSE")
+
+        print("|")
+        print("| STUDENT GUIDE:")
+        print("| - Claude's response contains important information")
+        print("| - 'stop_reason' tells us what Claude decided to do")
+        print("| - 'content' contains Claude's message and any tool calls")
+        print("|")
+        pause(2.0, "Understanding response structure")
 
         print("| Claude's response contains:")
         print(f"|   - stop_reason: '{response.stop_reason}'")
@@ -251,7 +376,12 @@ def run_logged_agentic_loop(user_message: str):
         print("| Content block types:")
         for i, block in enumerate(response.content):
             print(f"|   Block {i+1}: type='{block.type}'")
+            if hasattr(block, 'text'):
+                print(f"|           text: {block.text[:50]}...")
+            if hasattr(block, 'name'):
+                print(f"|           tool_name: {block.name}")
         print("|")
+        pause(1.5, "Response analysis complete")
 
         # =====================================================================
         # STEP 3: CHECK STOP REASON
@@ -260,35 +390,72 @@ def run_logged_agentic_loop(user_message: str):
         logger.separator("STEP 3: CHECKING STOP_REASON")
 
         print("|")
+        print("| ===============================================")
+        print("| CRITICAL CONCEPT - STOP_REASON!")
+        print("| ===============================================")
+        print("|")
         print("| The stop_reason tells us what Claude decided to do!")
         print("|")
+        pause(2.0, "Understanding stop_reason importance")
         print("| Possible values:")
+        print("|")
         print("|   'tool_use' -> Claude wants to call a tool")
-        print("|   'end_turn' -> Claude has the final answer")
+        print("|               -> We execute the tool, then loop back")
+        print("|")
+        pause(1.0, "Learning about tool_use")
+        print("|   'end_turn' -> Claude has the final answer!")
+        print("|               -> We're done! Return answer to user")
+        print("|")
+        pause(1.0, "Learning about end_turn")
         print("|   'max_tokens' -> Hit token limit (unexpected)")
         print("|")
+        pause(1.0, "Learning about max_tokens")
+        print(f"|")
+        print("| ===============================================")
         print(f"| Current stop_reason: '{response.stop_reason}'")
+        print("| ===============================================")
         print("|")
+        pause(2.0, f"Current stop_reason is: {response.stop_reason}")
 
         # =====================================================================
         # ROUTE BASED ON STOP REASON
         # =====================================================================
 
         if response.stop_reason == "tool_use":
-            print("| [DECISION] It's 'tool_use'!")
-            print("|            We need to execute tools!")
             print("|")
-            print("|            -> Continue to tool execution phase")
+            print("| ===============================================")
+            print("| DECISION: stop_reason = 'tool_use'")
+            print("| ===============================================")
             print("|")
+            print("| Claude wants to use a tool!")
+            print("|")
+            print("| Next steps:")
+            print("|   1. Find which tool(s) Claude wants to call")
+            print("|   2. Execute those tools on YOUR machine")
+            print("|   3. Send results back to Claude")
+            print("|   4. Loop back for Claude's next decision")
+            print("|")
+            pause(2.5, "Understanding tool_use decision")
 
             # =================================================================
             # PHASE: TOOL EXECUTION
             # =================================================================
 
-            logger.separator("PHASE: EXECUTING TOOLS")
+            logger.separator("PHASE: TOOL EXECUTION")
+
+            print("|")
+            print("| STUDENT GUIDE:")
+            print("| - We extract tool calls from Claude's response")
+            print("| - Build an 'assistant' message with those tool calls")
+            print("| - Execute the tools (THIS HAPPENS ON YOUR MACHINE!)")
+            print("| - Add tool results to messages")
+            print("| - Loop back to send results to Claude")
+            print("|")
+            pause(2.5, "Understanding tool execution flow")
 
             print("| Building assistant message with tool calls...")
             print("|")
+            pause(1.0, "Building assistant message")
 
             # Build assistant message (MUST come before tool_result!)
             assistant_message = {
@@ -300,11 +467,12 @@ def run_logged_agentic_loop(user_message: str):
 
             for block in response.content:
                 if block.type == "text":
-                    print(f"| Found text block: {block.text[:50]}...")
+                    print(f"| Found text block from Claude: {block.text[:50]}...")
                     assistant_message["content"].append({
                         "type": "text",
                         "text": block.text
                     })
+                    pause(0.5, "Adding text to assistant message")
 
                 elif block.type == "tool_use":
                     tool_name = block.name
@@ -312,22 +480,31 @@ def run_logged_agentic_loop(user_message: str):
                     tool_id = block.id
 
                     print(f"|")
+                    print(f"| ===============================================")
                     print(f"| FOUND TOOL_USE BLOCK!")
+                    print(f"| ===============================================")
                     print(f"|")
                     print(f"| Tool Name: {tool_name}")
                     print(f"| Tool ID: {tool_id}")
                     print(f"| Tool Input: {tool_input}")
                     print(f"|")
+                    pause(1.5, "Found tool call details")
 
-                    # This is where YOUR code executes the tool!
+                    # THIS IS THE KEY PART - Tool execution happens HERE!
                     print("|")
-                    print("| CALLING execute_tool_locally()...")
-                    print("| This runs the tool on YOUR computer!")
+                    print("| [CALLING TOOL EXECUTOR]...")
                     print("|")
+                    print("| Remember: execute_tool_locally() runs on YOUR computer!")
+                    print("| Claude doesn't execute tools - YOUR CODE does!")
+                    print("|")
+                    pause(2.0, "Important: tools execute locally!")
+
                     result = execute_tool_locally(tool_name, tool_input, logger)
 
+                    print(f"|")
                     print(f"| Tool returned result: '{result}'")
                     print("|")
+                    pause(1.0, "Tool execution complete")
 
                     # Add tool_use block to assistant message
                     assistant_message["content"].append({
@@ -346,17 +523,28 @@ def run_logged_agentic_loop(user_message: str):
             # ADD MESSAGES TO HISTORY
             # =================================================================
 
-            logger.separator("ADDING TOOL RESULTS TO HISTORY")
+            logger.separator("ADDING RESULTS TO MESSAGES")
 
             print("|")
-            print("| Step 1: Append assistant message ( Claude's tool request )")
+            print("| STUDENT GUIDE:")
+            print("| - We must add messages in the CORRECT order:")
+            print("|   1. Assistant message (Claude's tool request)")
+            print("|   2. User message with tool_result (the execution result)")
+            print("|")
+            pause(2.0, "Understanding message order")
+
+            print("|")
+            print("| Step 1: Append assistant message")
+            print("|         This represents what Claude said/request")
             print("|")
             messages.append(assistant_message)
             print("| [SUCCESS] Assistant message added!")
             print(f"| Messages now: {len(messages)} total")
             print("|")
+            pause(1.0, "Assistant message added")
 
-            print("| Step 2: Append tool_result messages")
+            print("| Step 2: Append tool_result message")
+            print("|         This contains the result of our tool execution")
             print("|")
             for tool_result in tool_results_to_add:
                 messages.append({
@@ -370,15 +558,43 @@ def run_logged_agentic_loop(user_message: str):
                 print(f"| Added: tool_result for {tool_result['tool_use_id']}")
             print("|")
             print("| [SUCCESS] Tool results added!")
-            print(f"| Messages now: ")
-            for i, msg in enumerate(messages):
-                role = msg["role"]
-                content_preview = str(msg["content"])[:40]
-                print(f"|   [{i}] {role}: {content_preview}...")
-            print("|")
+            print(f"|")
+            pause(1.0, "Tool results added")
 
             print("|")
-            print("| [INFO] Now looping back to Claude with updated conversation")
+            print("| Current messages list:")
+            for i, msg in enumerate(messages):
+                role = msg["role"]
+                content = msg["content"]
+                if isinstance(content, list):
+                    types = [c.get('type', 'unknown') for c in content]
+                    content_str = str(types)
+                else:
+                    content_str = str(content)[:40]
+                print(f"|   [{i}] {role}: {content_str}")
+            print("|")
+            pause(1.5, "Reviewing updated messages")
+
+            print("|")
+            print("| ===============================================")
+            print("| LOOPING BACK TO CLAUDE")
+            print("| ===============================================")
+            print("|")
+            print("| VISUAL: The loop continues!")
+            print("|")
+            print("|    Tool executed locally")
+            print("|          |")
+            print("|          v")
+            print("|    Results added to messages")
+            print("|          |")
+            print("|          v")
+            print("|    messages.create() called again")
+            print("|          |")
+            print("|          v")
+            print("|    Back to STEP 1 (Claude analyzes again)")
+            print("|")
+            pause(2.5, "Understanding loop continuation")
+
             print("|")
             print("| V" * 20)
             print("|")
@@ -391,13 +607,26 @@ def run_logged_agentic_loop(user_message: str):
         # =====================================================================
 
         elif response.stop_reason == "end_turn":
-            print("| [DECISION] It's 'end_turn'!")
-            print("|            Claude has the final answer!")
             print("|")
-            print("|            -> Done looping, return the answer")
+            print("| ===============================================")
+            print("| DECISION: stop_reason = 'end_turn'")
+            print("| ===============================================")
             print("|")
+            print("| Claude has the final answer!")
+            print("|")
+            print("| The agentic loop is COMPLETE!")
+            print("|")
+            pause(2.5, "Understanding end_turn")
 
-            logger.separator("FINAL ANSWER")
+            logger.separator("PHASE: FINAL ANSWER")
+
+            print("|")
+            print("| STUDENT GUIDE:")
+            print("| - stop_reason = 'end_turn' means Claude is done thinking")
+            print("| - No more tool calls needed")
+            print("| - We can extract the final text response and return it")
+            print("|")
+            pause(2.0, "Understanding final answer extraction")
 
             final_response = ""
             for block in response.content:
@@ -406,20 +635,25 @@ def run_logged_agentic_loop(user_message: str):
                     break
 
             print("|")
-            print("| Claude's final response:")
+            print("| ===============================================")
+            print("| CLAUDE'S FINAL ANSWER:")
+            print("| ===============================================")
             print("|")
             print(f"| {final_response}")
             print("|")
-            print("=" * 60)
-            print("| AGENTIC LOOP COMPLETE!")
-            print("=" * 60)
+            print("| ===============================================")
             print("|")
-            print("| Final message count in history:")
-            print(f"|   {len(messages)} messages stored")
+            pause(2.0, "Viewing final answer")
+
+            print("|")
+            print("| AGENTIC LOOP COMPLETE!")
+            print("|")
+            print(f"| Final message count in history: {len(messages)}")
             print("|")
             print("| These messages are saved and can be used to")
             print("| continue the conversation or resume later!")
             print("|")
+            pause(1.5, "Loop complete")
 
             return final_response
 
@@ -428,8 +662,10 @@ def run_logged_agentic_loop(user_message: str):
         # =====================================================================
 
         elif response.stop_reason == "max_tokens":
+            print("|")
             print("| [ERROR] Hit max_tokens limit!")
-            print("|          Something went wrong or the response is too long")
+            print("|          This means the response was too long")
+            print("|          or something unexpected happened")
             print("|")
             return "Error: Hit token limit"
 
@@ -448,16 +684,20 @@ if __name__ == "__main__":
     print("FLOW LOGGER: COMPLETE AGENTIC LOOP EXECUTION TRACKER")
     print("=" * 70)
     print("""
-This program demonstrates the COMPLETE flow of an agentic loop
-with detailed step-by-step logging at every stage.
-
-You'll see:
-- How messages are built and sent to Claude
-- What Claude responds with
-- How stop_reason determines the next action
-- When and how tools are executed (ON YOUR MACHINE!)
-- How results flow back to Claude for final answer
+| TEACHING MODE: This program demonstrates the complete flow of an
+| agentic loop with step-by-step logging and pauses for comprehension.
+|
+| You'll see:
+| - How messages are built and sent to Claude
+| - What Claude responds with at each step
+| - How stop_reason determines the next action
+| - When and how tools are executed (ON YOUR MACHINE!)
+| - How results flow back to Claude for final answer
+|
+| WATCH CAREFULLY - Each section will pause for you to read and understand!
     """)
+
+    pause(3.0, "Starting soon...")
 
     print("\n" + "=" * 70)
     print("STARTING THE LOGGED AGENTIC LOOP")
@@ -466,30 +706,64 @@ You'll see:
     # Simple math question that requires the calculator tool
     user_input = "What is 1500 + 2500? Please use the calculator tool."
 
-    print(f"\n>>> User asking: \"{user_input}\"")
-    print("\n>>> Watch the flow below!\n")
+    print(f"\n>>> STUDENT: User asking: \"{user_input}\"")
+    print("\n>>> Watch the flow below and read each explanation carefully!\n")
+
+    pause(2.0, "Starting the demonstration")
 
     result = run_logged_agentic_loop(user_input)
 
+    section_pause()
+
     print("\n" + "=" * 70)
-    print("EXECUTION COMPLETE!")
+    print("EXECUTION COMPLETE - SUMMARY")
     print("=" * 70)
+
     print(f"""
-RESULT: {result}
+| FINAL RESULT: {result}
 
-WHAT HAPPENED STEP BY STEP:
-1. User message sent to Claude with tool definition
-2. Claude analyzed the request and said "tool_use"
-3. Your code executed the calculator on YOUR machine
-4. Result sent back to Claude
-5. Claude synthesized the final answer
-6. Claude said "end_turn" - loop complete!
+| WHAT HAPPENED STEP BY STEP:
+| ==========================================================================
+| STEP 0: INITIALIZATION
+|   - Created empty messages list
+|   - Defined tools (calculator)
+|
+| STEP 1: ADDED USER MESSAGE
+|   - Wrapped user input in 'user' role message
+|   - Added to messages list
+|
+| STEP 2: SENT REQUEST TO CLAUDE API
+|   - Called messages.create() with messages + tools
+|   - Claude received and analyzed the request
+|
+| STEP 3: RECEIVED RESPONSE
+|   - Claude said: 'tool_use' (wants to use calculator)
+|   - Extracted tool call from response
+|
+| STEP 4: EXECUTED TOOL LOCALLY
+|   - Your code evaluated: 1500 + 2500
+|   - Result: 4000
+|
+| STEP 5: SENT RESULTS BACK TO CLAUDE
+|   - Added assistant message + tool_result to messages
+|   - Called messages.create() again
+|
+| STEP 6: RECEIVED FINAL ANSWER
+|   - Claude said: 'end_turn' (done thinking)
+|   - Extracted final text response
+|   - AGENTIC LOOP COMPLETE!
+| ==========================================================================
 
-KEY TAKEAWAY:
-- Claude decides WHAT tool to use
-- YOUR CODE executes the tool on YOUR machine
-- Results are sent back to Claude for reasoning
+| KEY TAKEAWAYS:
+| ==========================================================================
+| 1. Claude is the REASONING engine - it decides WHAT to do
+| 2. YOUR CODE is the EXECUTION engine - it actually DOES things
+| 3. The loop continues until stop_reason = 'end_turn'
+| 4. Messages must be added in correct order: assistant BEFORE tool_result
+| ==========================================================================
     """)
+
+    pause(3.0, "Review complete summary")
 
     print("\n" + "=" * 70)
     print("WHAT WE HAVE LEARNT FROM THIS FLOW LOGGER:")
@@ -516,45 +790,43 @@ KEY TAKEAWAY:
 +======================================================================+
 """)
 
+    print("""
+| TEACHING MODE COMPLETE!
+| ==========================================================================
+| To disable pauses, set TEACHING_MODE = False at the top of the file.
+| ==========================================================================
+    """)
+
 
 """
 +===========================================================================+
 |                                                                           |
-|  EXECUTION FLOW SUMMARY:                                                 |
+|  EXECUTION FLOW SUMMARY - VISUAL CHEAT SHEET:                          |
 |                                                                           |
-|  Your Computer                          Claude Cloud                      |
-|  =============                          ===========    |
-|                                                                           |
-|  [1] Build messages list                                                  |
-|      |                                    |                                |
-|      | messages.create()                  |                                |
-|      v                                    v                                |
-|  [2] Send to Claude API  ----------------->  Claude receives              |
-|                                             - user message |
-|                                             - tool definitions |
-|                                             (Claude learns when to use tools) |
-|                                                                           |
-|  [3] Claude analyzes request                                              |
-|      - Checks if tools needed     |
-|      - Decides: tool_use or end_turn |
-|                                                                           |
-|      |                                                               |
-|      v                                                               |
-|  [4] Claude responds with stop_reason                                    |
-|      <----------------- Response with stop_reason + content |
-|                                                                           |
-|  [5a] If tool_use:                                                        |
-|       - Find tool in response.content |
-|       - YOUR CODE executes it HERE |  |
-|       - Return result as string  |
-|       - Add to messages  |
-|       - Loop back to step [2]        |
-|                                                                           |
-|  [5b] If end_turn:                                                       |
-|       - Handled content to user     |
-|       - Done!                     (No loop back)           |
-|                                                                           |
-|  KEY INSIGHT: Claude is the REASONING engine. YOU are the EXECUTION engine.|
-|                                                                           |
++===========================================================================+
+
+    Your Computer                          Claude Cloud
+    =============                          ===========
+
+    [1] Build messages list
+        |
+        v
+    [2] messages.create() ----------------->  Claude receives
+        |                                     - user message
+        |                                     - tool definitions
+        v                                     (Claude learns tools)
+    [3] Claude analyzes
+        |    |
+        |    +-- tool_use? --> [4] Execute tool locally
+        |    |                    |
+        |    |                    v
+        |    |                Add result to messages
+        |    |                    |
+        |    +---- Loop back to [2] ----+
+        |
+        +-- end_turn? --> [5] Return answer to user
+
+    KEY INSIGHT: Claude is the REASONING engine. YOU are the EXECUTION engine.
+
 +===========================================================================+
 """
