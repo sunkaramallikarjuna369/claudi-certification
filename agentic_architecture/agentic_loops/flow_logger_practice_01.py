@@ -740,6 +740,543 @@ KEY CONCEPTS COVERED:
 """
 +===========================================================================+
 |                                                                           |
+|  COMPLETE VISUAL FLOW - ALL 9 PHASES                                     |
+|                                                                           |
+|  This diagram shows the complete agentic loop from start to finish.     |
+|  Perfect for beginners to understand how everything connects!           |
+|                                                                           |
++===========================================================================+
+
++===========================================================================+
+|                                                                           |
+|  OVERVIEW: The Complete Agentic Loop                                     |
+|                                                                           |
++===========================================================================+
+
+    +========================================================================+
+    ||                                                                      ||
+    ||  STEP 1                STEP 2                STEP 3                ||
+    ||  =========              =========              =========              ||
+    ||  INITIALIZATION         USER_MESSAGE          API_REQUEST            ||
+    ||  (Setup)                (Add question)        (Send to Claude)      ||
+    ||       |                      |                     |                  ||
+    ||       v                      v                     v                  ||
+    ||  +-----------+         +-----------+        +-----------+            ||
+    ||  | messages=[]|   -->  | messages + |  -->  | client.   |            ||
+    ||  | tools=def |        | role:user |        | messages  |            ||
+    ||  +-----------+        +-----------+        | .create() |            ||
+    ||                                           +-----------+            ||
+    ||                                                   |                  ||
+    ++====================================================|==================++
+                                                       |
+                                                       v
+    +========================================================================+
+    ||                                                                      ||
+    ||  STEP 4                STEP 5                STEP 6                ||
+    ||  =========              =========              =========              ||
+    ||  API_RESPONSE           STOP_REASON           TOOL_EXECUTION         ||
+    ||  (Get response)         (Make decision)       (Run tool locally)    ||
+    ||       |                      |                     |                  ||
+    ||       v                      v                     v                  ||
+    ||  +-----------+        +-----------+        +-----------+            ||
+    ||  | response  |        | if tool_use|        | execute  |            ||
+    ||  | .content  |  -->   | if end_turn|  -->   | _tool()   |            ||
+    ||  +-----------+        +-----------+        +-----------+            ||
+    ||                                               [YOUR MACHINE!]         ||
+    ||                                                   |                  ||
+    ++====================================================|==================++
+                                                       |
+                                                       v
+    +========================================================================+
+    ||                                                                      ||
+    ||  STEP 7                STEP 8                STEP 9                ||
+    ||  =========              =========              =========              ||
+    ||  MESSAGE_UPDATE         LOOP_BACK              FINAL_ANSWER          ||
+    ||  (Add results)          (Go again?)             (Done!)               ||
+    ||       |                      |                     |                  ||
+    ||       v                      v                     v                  ||
+    ||  +-----------+        +-----------+        +-----------+            ||
+    ||  | messages + |        | Loop back |        | Return    |            ||
+    ||  | assistant |  -->   | to Step 3 |  -->   | to user   |            ||
+    ||  | messages + |        |           |        +-----------+            ||
+    ||  | tool_result|        | (or EXIT) |                               ||
+    ||  +-----------+        +-----------+                                   ||
+    ||                                                                      ||
+    ++======================================================================++
+
+
++===========================================================================+
+|                                                                           |
+|  DETAILED STEP-BY-STEP VISUAL                                            |
+|                                                                           |
++===========================================================================+
+
+--------------------------------------------------------------------------------
+STEP 1: INITIALIZATION
+--------------------------------------------------------------------------------
+
+    +------------------------------------------+
+    |  YOUR COMPUTER (Python Script)           |
+    +------------------------------------------+
+    |                                          |
+    |  messages = []                           |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | Empty list ready |                     |
+    |  +------------------+                     |
+    |                                          |
+    |  tools = get_tool_definition()           |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | Tool schema:     |                     |
+    |  | - name           |                     |
+    |  | - description    |                     |
+    |  | - input_schema   |                     |
+    |  +------------------+                     |
+    |                                          |
+    +------------------------------------------+
+
+    TEACHER EXPLANATION:
+    - We create a blank list to hold conversation messages
+    - We define what tools Claude can use
+    - Claude will read these definitions and LEARN when to use tools
+
+
+--------------------------------------------------------------------------------
+STEP 2: USER MESSAGE
+--------------------------------------------------------------------------------
+
+    +------------------------------------------+
+    |  USER MESSAGE                            |
+    +------------------------------------------+
+    |                                          |
+    |  user_message = "What is 1500 + 2500?"   |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | messages.append( |                     |
+    |  |   {              |                     |
+    |  |     role:'user', |                     |
+    |  |     content: ... |                     |
+    |  |   }              |                     |
+    |  | )                |                     |
+    |  +------------------+                     |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | messages = [     |                     |
+    |  |   {role:'user',  |                     |
+    |  |    content:'...'} |                     |
+    |  | ]                |                     |
+    |  +------------------+                     |
+    |                                          |
+    +------------------------------------------+
+
+    TEACHER EXPLANATION:
+    - The user's question is wrapped in a message structure
+    - role='user' tells Claude this is from the human
+    - This is now the FIRST entry in our conversation history
+
+
+--------------------------------------------------------------------------------
+STEP 3: API REQUEST (Send to Claude)
+--------------------------------------------------------------------------------
+
+    +----------------------------+      +--------------------------+
+    |  YOUR COMPUTER             |      |  CLAUDE CLOUD           |
+    +----------------------------+      +--------------------------+
+    |                            |      |                          |
+    |  messages.create(          |      |                          |
+    |    model='haiku',          | ===> |  Claude receives:        |
+    |    messages=[...],         |      |  - User message          |
+    |    tools=[...]             |      |  - Tool definitions      |
+    |  )                         |      |  - Full context          |
+    |                            |      |                          |
+    |  [Waiting for response...] | <==== |  Claude thinks...        |
+    |                            |      |  - Analyze question      |
+    +----------------------------+      |  - Decide: use tool?    |
+                                        |                          |
+                                        +--------------------------+
+
+    TEACHER EXPLANATION:
+    - We call the Claude API with our messages AND tool definitions
+    - Claude gets EVERYTHING: question + tools it can use
+    - Claude thinks and decides what to do next
+
+
+--------------------------------------------------------------------------------
+STEP 4: API RESPONSE (Claude responds)
+--------------------------------------------------------------------------------
+
+    +------------------------------------------+
+    |  CLAUDE'S RESPONSE                       |
+    +------------------------------------------+
+    |                                          |
+    |  response = {                            |
+    |    stop_reason: "tool_use",   <-- KEY! |
+    |    content: [                          |
+    |      {                                 |
+    |        type: "text",                   |
+    |        text: "I'll calculate this..."   |
+    |      },                                 |
+    |      {                                 |
+    |        type: "tool_use",               |
+    |        name: "calculator",              |
+    |        input: {"expression":"1500+2500"}|
+    |      }                                  |
+    |    ]                                    |
+    |  }                                      |
+    |                                          |
+    +------------------------------------------+
+
+    TEACHER EXPLANATION:
+    - Claude responds with TWO things:
+      1. stop_reason = what Claude decided to do
+      2. content = the response (text + tool calls)
+    - stop_reason tells us: "tool_use" or "end_turn"
+
+
+--------------------------------------------------------------------------------
+STEP 5: STOP REASON (Claude's decision)
+--------------------------------------------------------------------------------
+
+    +------------------------------------------+
+    |  STOP_REASON CHECK                       |
+    +------------------------------------------+
+    |                                          |
+    |  if response.stop_reason == "tool_use": |
+    |       |                                  |
+    |       | (Claude wants to call a tool!)   |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | GO TO STEP 6     |                     |
+    |  | Execute the tool  |                     |
+    |  +------------------+                     |
+    |                                          |
+    |  elif response.stop_reason == "end_turn":|
+    |       |                                  |
+    |       | (Claude has answer!)              |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | GO TO STEP 9     |                     |
+    |  | Return answer    |                     |
+    |  +------------------+                     |
+    |                                          |
+    +------------------------------------------+
+
+    THE THREE POSSIBILITIES:
+    +---------------------+----------------------------------------+
+    | stop_reason         | What it means                          |
+    +---------------------+----------------------------------------+
+    | "tool_use"          | Claude wants to call a tool            |
+    |                     | -> Execute tool, then loop back        |
+    +---------------------+----------------------------------------+
+    | "end_turn"          | Claude has final answer                |
+    |                     | -> Return answer to user, DONE!        |
+    +---------------------+----------------------------------------+
+    | "max_tokens"        | Hit token limit (error)                |
+    |                     | -> Something went wrong                |
+    +---------------------+----------------------------------------+
+
+
+--------------------------------------------------------------------------------
+STEP 6: TOOL EXECUTION (On YOUR machine!)
+--------------------------------------------------------------------------------
+
+    +===============================================================+
+    ||                                                              ||
+    ||  IMPORTANT! TOOLS EXECUTE ON YOUR MACHINE, NOT CLAUDE'S!   ||
+    ||                                                              ||
+    ++==============================================================++
+
+    +----------------------------+      +--------------------------+
+    |  YOUR COMPUTER             |      |  CLAUDE CLOUD           |
+    +----------------------------+      +--------------------------+
+    |                            |      |                          |
+    |  Claude said:              |      |                          |
+    |  "Use calculator tool"     |      |                          |
+    |       |                    |      |                          |
+    |       v                    |      |                          |
+    |  +------------------+     |      |                          |
+    |  | execute_tool(    |     |      |                          |
+    |  |   "calculator",  |     |      |                          |
+    |  |   {"1500+2500"}  |     |      |                          |
+    |  | )                |     |      |                          |
+    |  +------------------+     |      |                          |
+    |       |                   |      |                          |
+    |       v                   |      |                          |
+    |  +------------------+     |      |                          |
+    |  | RESULT = "4000" |     |      |                          |
+    |  +------------------+     |      |                          |
+    |                            | ===> |  Send result back:      |
+    |  [This runs on YOUR        |      |  "The answer is 4000"   |
+    |   computer!]               |      |                          |
+    +----------------------------+      +--------------------------+
+
+    TEACHER EXPLANATION:
+    - Claude DECIDES what tool to use (reasoning)
+    - YOUR CODE actually RUNS the tool (execution)
+    - This is a security feature!
+    - Claude cannot run code directly - only your code can
+
+
+--------------------------------------------------------------------------------
+STEP 7: MESSAGE UPDATE (Add results to history)
+--------------------------------------------------------------------------------
+
+    +------------------------------------------+
+    |  ADDING MESSAGES IN ORDER                |
+    +------------------------------------------+
+    |                                          |
+    |  Order is VERY IMPORTANT!                |
+    |                                          |
+    |  1. First: Add ASSISTANT message         |
+    |     +------------------+                 |
+    |     | messages.append( |                 |
+    |     |   {              |                 |
+    |     |     role:'assistant',              |
+    |     |     content:[   |                 |
+    |     |       tool_use  |                 |
+    |     |     ]           |                 |
+    |     |   }              |                 |
+    |     | )                |                 |
+    |     +------------------+                 |
+    |                                          |
+    |  2. Second: Add USER message with result |
+    |     +------------------+                 |
+    |     | messages.append( |                 |
+    |     |   {              |                 |
+    |     |     role:'user', |                 |
+    |     |     content:[{   |                 |
+    |     |       type:      |                 |
+    |     |         'tool_result',             |
+    |     |       tool_use_id|                 |
+    |     |         :'...',   |                 |
+    |     |       content:   |                 |
+    |     |         '4000'   |                 |
+    |     |     }]           |                 |
+    |     |   }              |                 |
+    |     | )                |                 |
+    |     +------------------+                 |
+    |                                          |
+    +------------------------------------------+
+
+    TEACHER EXPLANATION:
+    - ASSISTANT message comes FIRST (Claude's request)
+    - USER message with tool_result comes SECOND (the result)
+    - This is how Claude knows the tool was executed!
+    - Wrong order = Claude gets confused
+
+
+--------------------------------------------------------------------------------
+STEP 8: LOOP BACK (Continue or Exit?)
+--------------------------------------------------------------------------------
+
+    +========================================+
+    ||                                        ||
+    ||         THE LOOP CONTINUES!            ||
+    ||                                        ||
+    ++=======================================++
+
+    +------------------------------------------+
+    |  LOOP DECISION                           |
+    +------------------------------------------+
+    |                                          |
+    |  Did tool execute successfully?          |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | YES: Loop back   |                     |
+    |  |   to Step 3      |                     |
+    |  +------------------+                     |
+    |       |                                  |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | Send updated     |                     |
+    |  | messages to      |                     |
+    |  | Claude again     |                     |
+    |  +------------------+                     |
+    |       |                                  |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | Claude checks    |                     |
+    |  | stop_reason      |                     |
+    |  | again!           |                     |
+    |  +------------------+                     |
+    |                                          |
+    +------------------------------------------+
+
+    THE LOOP PATTERN:
+
+    messages.create()  -->  Claude thinks  -->  stop_reason?
+                                       |
+                    +------------------+------------------+
+                    |                                     |
+                tool_use                             end_turn
+                    |                                     |
+                    v                                     v
+            Execute tool                           RETURN ANSWER
+                    |                                     |
+                    v                                     |
+            Update messages                              |
+                    |                                     |
+                    v                                     |
+            [LOOP BACK] <---------------------------------+
+                    |
+                    v
+            Check stop_reason again
+
+
+--------------------------------------------------------------------------------
+STEP 9: FINAL ANSWER (Loop complete!)
+--------------------------------------------------------------------------------
+
+    +------------------------------------------+
+    |  FINAL ANSWER                            |
+    +------------------------------------------+
+    |                                          |
+    |  Claude said: stop_reason = "end_turn"  |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | Extract text     |                     |
+    |  | from response    |                     |
+    |  +------------------+                     |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | final_response = |                     |
+    |  | "The answer is   |                     |
+    |  |  4000"           |                     |
+    |  +------------------+                     |
+    |       |                                  |
+    |       v                                  |
+    |  +------------------+                     |
+    |  | Return to user!  |                     |
+    |  | LOOP COMPLETE!   |                     |
+    |  +------------------+                     |
+    |                                          |
+    +------------------------------------------+
+
+    SUCCESS! The agentic loop has completed.
+
+
++===========================================================================+
+|                                                                           |
+|  COMPLETE FLOW: ONE PICTURE SUMMARY                                      |
+|                                                                           |
++===========================================================================+
+
+    +========================================================================+
+    ||                                                                      ||
+    ||                                                                      ||
+    ||    USER                                                               ||
+    ||    QUESTION                                                          ||
+    ||        |                                                             ||
+    ||        v                                                             ||
+    ||   +---------+                                                        ||
+    ||   | Step 1  |  Initialize: messages=[], tools=[...]                  ||
+    ||   +----+----+                                                        ||
+    ||        |                                                             ||
+    ||        v                                                             ||
+    ||   +---------+                                                        ||
+    ||   | Step 2  |  Add user message                                      ||
+    ||   +----+----+                                                        ||
+    ||        |                                                             ||
+    ||        v                                                             ||
+    ||   +---------+                                                        ||
+    ||   | Step 3  |  Send to Claude API  --------------------+              ||
+    ||   +----+----+                                       |                  ||
+    ||        |                                            |                  ||
+    ||        v                                            v                  ||
+    ||   +---------+                                 +---------+             ||
+    ||   | Step 4  |  <-------------------------    | CLAUDE  |             ||
+    ||   | Examine |    Response received           |  CLOUD  |             ||
+    ||   +----+----+    with stop_reason            +----+----+             ||
+    ||        |                                           |                   ||
+    ||        v                                           |                   ||
+    ||   +---------+                                      |                   ||
+    ||   | Step 5  |  Check stop_reason                   |                   ||
+    ||   +----+----+     |                                |                   ||
+    ||        |          | tool_use                        |                   ||
+    ||        |          +-------------------------------->+                   ||
+    ||        |                                                             ||
+    ||        v                                                             ||
+    ||   +---------+                                                        ||
+    ||   | Step 6  |  Execute tool on YOUR MACHINE                          ||
+    ||   +----+----+                                                        ||
+    ||        |                                                             ||
+    ||        v                                                             ||
+    ||   +---------+                                                        ||
+    ||   | Step 7  |  Update messages (assistant + tool_result)            ||
+    ||   +----+----+                                                        ||
+    ||        |                                                             ||
+    ||        v                                                             ||
+    ||   +---------+                                                        ||
+    ||   | Step 8  |  Loop back to Step 3  ----+                           ||
+    ||   +----+----+                            |                           ||
+    ||        |                                |                           ||
+    ||        |          [LOOP CONTINUES]       |                           ||
+    ||        |                                |                           ||
+    ||        |                                |                           ||
+    ||        v                                |                           ||
+    ||   +---------+                            |                           ||
+    ||   | Step 9  |  <-------------------------+                           ||
+    ||   | Final   |    (when end_turn)                                  ||
+    ||   | Answer  |                                                    ||
+    ||   +---------+                                                    ||
+    ||        |                                                         ||
+    ||        v                                                         ||
+    ||   +---------+                                                    ||
+    ||   | ANSWER  |  Return to user!                                    ||
+    ||   +---------+                                                    ||
+    ||                                                                      ||
+    ++======================================================================++
+
+
++===========================================================================+
+|                                                                           |
+|  KEY CONCEPTS TO REMEMBER                                                  |
+|                                                                           |
++===========================================================================+
+
+    +======================================================================+
+    ||                                                                      ||
+    ||  1. TWO ENGINES WORK TOGETHER:                                      ||
+    ||     - Claude = REASONING engine (thinks)                            ||
+    ||     - Your code = EXECUTION engine (does things)                     ||
+    ||                                                                      ||
+    ||  2. TOOLS RUN ON YOUR MACHINE:                                      ||
+    ||     Claude cannot run code directly                                  ||
+    ||     Only YOUR code can execute on your computer                      ||
+    ||                                                                      ||
+    ||  3. MESSAGE ORDER MATTERS:                                          ||
+    ||     1. Assistant message (Claude's request)                        ||
+    ||     2. User message with tool_result (the result)                    ||
+    ||                                                                      ||
+    ||  4. THE LOOP CONTINUES UNTIL end_turn:                              ||
+    ||     - tool_use = Execute tools, loop back                          ||
+    ||     - end_turn = Return final answer, done!                          ||
+    ||                                                                      ||
+    ||  5. stop_reason IS THE KEY:                                         ||
+    ||     It tells you what Claude decided to do                          ||
+    ||                                                                      ||
+    ++======================================================================++
+
+    Happy Learning! Now you understand how AI agents work!
+
+
++===========================================================================+
+"""
+
+
+"""
++===========================================================================+
+|                                                                           |
 |  QUICK REFERENCE - stop_reason VALUES:                                   |
 |                                                                           |
 |  'tool_use'  -> Execute tools and loop back                              |
