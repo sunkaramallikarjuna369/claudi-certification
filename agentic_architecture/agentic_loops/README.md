@@ -79,6 +79,41 @@ export ANTHROPIC_API_KEY=your-key-here
 python practice_01_basic_loop.py
 ```
 
+## Tool Execution Location
+
+**Important:** Tools execute on YOUR local machine, NOT in Claude's cloud.
+
+```
+YOUR COMPUTER                              CLAUDE CLOUD
+==========================                 ==============
+
++------------------+                       +------------------+
+| Python Script    |                       |                  |
+| +----------+     |   1. Send Request    |                  |
+| | Your Tool |    | +------------------> | Claude Model     |
+| | (defined  |    |                      | (reasoning only)  |
+| |  by you)  |    |                      |                  |
+| +----+-----+     |                       +------------------+
+      |           |   2. Tool Call             |
+      |           | <-------------------+      |
+      |           |   3. Tool Result          |
+      v           | +------------------>      |
++------------------+                      
+| [EXECUTES HERE]  |
+| - Read files    |                      
+| - Write files    |                     
+| - Run bash cmds  |                      
+| - API calls      |                      
++------------------+                             
+```
+
+**Key Points:**
+- **Claude Code CLI**: Built-in tools (Read, Write, Edit, Bash, Grep, Glob) execute locally on your machine
+- **Anthropic API**: YOU execute custom tools in your code; Claude only decides WHAT to run
+- **Claude NEVER** runs arbitrary code directly on external servers - it's a reasoning engine, not an execution engine
+
+This is a security feature - Claude can reason about tools without having direct execution access to your systems!
+
 ## Quick Reference Code
 
 ```python
@@ -100,6 +135,7 @@ while True:
     if response.stop_reason == "tool_use":
         for block in response.content:
             if block.type == "tool_use":
+                # YOU execute this locally - NOT Claude!
                 result = execute_tool(block.name, block.input)
                 messages.append({
                     "role": "user",
@@ -121,5 +157,6 @@ while True:
 - ❌ Parsing natural language like "I'm done"
 - ❌ Using iteration count as primary stopping mechanism
 - ❌ Checking `content[0].type == "text"` for completion
+- ❌ Assuming Claude executes your tools directly (it doesn't!)
 
 See `agentic-loop.md` for detailed documentation.

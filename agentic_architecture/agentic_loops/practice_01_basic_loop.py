@@ -95,8 +95,64 @@ KEY CONCEPTS YOU'LL LEARN
 
     1. TOOL DEFINITION: How to tell Claude what tools exist
     2. TOOL CALLING: How Claude decides to use a tool
-    3. TOOL EXECUTION: How to run the tool and return results
+    3. TOOL EXECUTION: How to run the tool and return results (ON YOUR MACHINE!)
     4. LOOP MECHANICS: How the agentic loop continues until done
+
+===========================================================================
+WHERE TOOL EXECUTION HAPPENS - CRITICAL CONCEPT!
+===========================================================================
+
+    IMPORTANT: Tools execute on YOUR LOCAL MACHINE, NOT in Claude's cloud!
+
+    +======================================================================+
+    ||                                                                      ||
+    ||  VISUAL: Execution Flow                                              ||
+    ||  ================================================================   ||
+    ||                                                                      ||
+    ||  YOUR COMPUTER               CLAUDE CLOUD                           ||
+    ||  ==============              =============                          ||
+    ||                                                                      ||
+    ||  +------------------+         +------------------+                   ||
+    ||  | Python Script    |         |                  |                   ||
+    ||  | +----------+     | 1. Send | Claude Model     |                   ||
+    ||  | | Your Tool |    | ------->| (reasoning only) |                   ||
+    ||  | | (YOU     |    |         |                  |                   ||
+    ||  | |  define) |    |         +------------------+                   ||
+    ||  | +----+-----+     |              |                                ||
+    ||  |      |           | 2. Response  |                                ||
+    ||  |      |           | <-------------+                                ||
+    ||  |      |           | (tool call instructions)                      ||
+    ||  |      v           |              |                                ||
+    ||  | [EXECUTE HERE]   |              |                                ||
+    ||  | - Read files     |              |                                ||
+    ||  | - Write files    |              |                                ||
+    ||  | - Run commands   |              |                                ||
+    ||  | - API calls      |              |                                ||
+    ||  +------------------+              |                                ||
+    ||                    3. Send Result  |                                ||
+    ||                    +-------------> |                                ||
+    ||                              (Claude continues reasoning)           ||
+    ||                                                                      ||
+    ||  KEY POINT: Claude tells YOU what to do. YOU do it locally.          ||
+    ||  Claude NEVER runs arbitrary code directly on your systems!        ||
+    ||                                                                      ||
+    +======================================================================+
+
+    WHY THIS MATTERS:
+
+    +----------------------------------------------------------------------+
+    | SECURITY: Claude can't run malicious code on your machine directly.  |
+    | Only YOU control what executes via your code.                        |
+    +----------------------------------------------------------------------+
+
+    +----------------------------------------------------------------------+
+    | CONTROL: You decide what the tool does. Claude just requests it.     |
+    +----------------------------------------------------------------------+
+
+    +----------------------------------------------------------------------+
+    | YOUR MACHINE: "execute_tool()" in your code is what actually runs.    |
+    | Claude cloud never touches your files directly.                      |
+    +----------------------------------------------------------------------+
 
 """
 
